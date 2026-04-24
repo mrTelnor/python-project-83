@@ -5,7 +5,7 @@ import validators
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
 
-from page_analyzer import urls_repo
+from page_analyzer import checks_repo, urls_repo
 from page_analyzer.db import get_connection
 
 load_dotenv()
@@ -44,7 +44,7 @@ def urls_create():
 @app.get('/urls')
 def urls_index():
     with get_connection() as conn:
-        urls = urls_repo.get_all(conn)
+        urls = urls_repo.get_all_with_last_check(conn)
     return render_template('urls/index.html', urls=urls)
 
 
@@ -52,9 +52,21 @@ def urls_index():
 def url_show(id):
     with get_connection() as conn:
         url = urls_repo.find_by_id(conn, id)
-    if url is None:
-        return 'Not Found', 404
-    return render_template('urls/show.html', url=url)
+        if url is None:
+            return 'Not Found', 404
+        checks = checks_repo.get_by_url_id(conn, id)
+    return render_template('urls/show.html', url=url, checks=checks)
+
+
+@app.post('/urls/<int:id>/checks')
+def url_checks_create(id):
+    with get_connection() as conn:
+        url = urls_repo.find_by_id(conn, id)
+        if url is None:
+            return 'Not Found', 404
+        checks_repo.insert(conn, id)
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('url_show', id=id))
 
 
 def _validate_url(value):
