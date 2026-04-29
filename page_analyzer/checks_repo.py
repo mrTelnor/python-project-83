@@ -1,11 +1,15 @@
 from psycopg2.extras import RealDictCursor
 
 
-def insert(conn, url_id):
+def insert(conn, url_id, status_code=None, h1=None, title=None, description=None):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
-            'INSERT INTO url_checks (url_id) VALUES (%s) RETURNING id',
-            (url_id,),
+            '''
+            INSERT INTO url_checks (url_id, status_code, h1, title, description)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+            ''',
+            (url_id, status_code, h1, title, description),
         )
         return cur.fetchone()['id']
 

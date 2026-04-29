@@ -1,11 +1,12 @@
 import os
 from urllib.parse import urlparse
 
+import requests
 import validators
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
 
-from page_analyzer import checks_repo, urls_repo
+from page_analyzer import checks_repo, page_check, urls_repo
 from page_analyzer.db import get_connection
 
 load_dotenv()
@@ -64,7 +65,15 @@ def url_checks_create(id):
         url = urls_repo.find_by_id(conn, id)
         if url is None:
             return 'Not Found', 404
-        checks_repo.insert(conn, id)
+
+        try:
+            page_data = page_check.fetch_page_data(url['name'])
+        except requests.RequestException:
+            flash('Произошла ошибка при проверке', 'danger')
+            return redirect(url_for('url_show', id=id))
+
+        checks_repo.insert(conn, id, status_code=page_data['status_code'])
+
     flash('Страница успешно проверена', 'success')
     return redirect(url_for('url_show', id=id))
 
