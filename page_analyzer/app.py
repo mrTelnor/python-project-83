@@ -15,6 +15,15 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
+@app.template_filter('truncate_seo')
+def truncate_seo(value):
+    if not value:
+        return ''
+    if len(value) > 200:
+        return value[:200] + '...'
+    return value
+
+
 @app.get('/')
 def index():
     return render_template('index.html')
@@ -72,7 +81,14 @@ def url_checks_create(id):
             flash('Произошла ошибка при проверке', 'danger')
             return redirect(url_for('url_show', id=id))
 
-        checks_repo.insert(conn, id, status_code=page_data['status_code'])
+        checks_repo.insert(
+            conn,
+            id,
+            status_code=page_data['status_code'],
+            h1=page_data['h1'],
+            title=page_data['title'],
+            description=page_data['description'],
+        )
 
     flash('Страница успешно проверена', 'success')
     return redirect(url_for('url_show', id=id))
