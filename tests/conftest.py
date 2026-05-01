@@ -21,7 +21,10 @@ def app(monkeypatch, postgresql):
         f'{info.dbname}'
     )
     monkeypatch.setenv('DATABASE_URL', dsn)
-    flask_app.config.update(TESTING=True)
+    flask_app.config.update(
+        TESTING=True,
+        SECRET_KEY='test-secret-key',
+    )
     yield flask_app
 
 
