@@ -62,7 +62,10 @@ def test_fetch_connection_error():
 
 @responses.activate
 def test_fetch_utf8_without_charset_header():
-    html = '<html><head><meta charset="utf-8"><title>Привет</title></head></html>'
+    html = (
+        '<html><head><meta charset="utf-8">'
+        '<title>Привет</title></head></html>'
+    )
     responses.add(
         responses.GET, 'http://example.com',
         body=html.encode('utf-8'),
